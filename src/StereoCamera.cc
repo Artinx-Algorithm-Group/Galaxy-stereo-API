@@ -1,6 +1,7 @@
 #include <iostream>
 #include <type_traits>
 #include <opencv2/opencv.hpp>
+#include <chrono>
 
 #include "StereoCamera/StereoCamera.hpp"
 #include "GxCamera/GxCamera.hpp"
@@ -10,6 +11,10 @@ using std::remove_const;
 using std::cout;
 using std::cerr;
 using std::endl;
+
+// using std::chrono::milliseconds;
+// using std::chrono::steady_clock;
+// using std::chrono::duration_cast;
 
 using cv::Mat;
 using cv::cvtColor;
@@ -178,8 +183,19 @@ StereoStatus Stereo::StartStereoStream() {
 }
 
 StereoStatus Stereo::GetColorImgStereo(Mat &left_img, Mat &right_img) {
+
+    // steady_clock::time_point left_cam_cap_start = steady_clock::now();
     this->left_cam_.GetColorImg(left_img);
+    // steady_clock::time_point left_cam_cap_end = steady_clock::now();
+    // milliseconds left_cap_time = duration_cast<milliseconds>(left_cam_cap_end - left_cam_cap_start);
+
+    // steady_clock::time_point right_cam_cap_start = steady_clock::now();
     this->right_cam_.GetColorImg(right_img);
+    // steady_clock::time_point right_cam_cap_end = steady_clock::now();
+    // milliseconds right_cap_time = duration_cast<milliseconds>(right_cam_cap_end - right_cam_cap_start);
+
+    // cout << "Left cam capture time: " << left_cap_time.count() << " ms" << endl;
+    // cout << "Right cam capture time: " << right_cap_time.count() << " ms" << endl;
 
     if (left_img.empty()) {
         cerr << "No data captured from left camera" << endl;
