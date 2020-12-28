@@ -47,10 +47,12 @@ int main() {
     stereo.StartStereoStream();
 
     Mat left_color_img, right_color_img, combined_img;
+    double timestamp = 0.0;
 
     signal(SIGINT, SigintHandler);
     while (!stop_flag){
-        stereo.GetColorImgStereo(left_color_img, right_color_img);
+        stereo.GetColorImgStereo(left_color_img, right_color_img, timestamp);
+        cout << "Timestamp in second: " << timestamp << endl;
 
         hconcat(left_color_img, right_color_img, combined_img);
         // Resize image for better display

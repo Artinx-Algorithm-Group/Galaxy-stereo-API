@@ -13,8 +13,9 @@ using std::cerr;
 using std::endl;
 
 // using std::chrono::milliseconds;
-// using std::chrono::steady_clock;
-// using std::chrono::duration_cast;
+using std::chrono::duration;
+using std::chrono::steady_clock;
+using std::chrono::duration_cast;
 
 using cv::Mat;
 using cv::cvtColor;
@@ -182,7 +183,7 @@ StereoStatus Stereo::StartStereoStream() {
     return StereoStatus::kStreamStartFail;
 }
 
-StereoStatus Stereo::GetColorImgStereo(Mat &left_img, Mat &right_img) {
+StereoStatus Stereo::GetColorImgStereo(Mat &left_img, Mat &right_img, double &timestamp) {
 
     // steady_clock::time_point left_cam_cap_start = steady_clock::now();
     this->left_cam_.GetColorImg(left_img);
@@ -196,6 +197,16 @@ StereoStatus Stereo::GetColorImgStereo(Mat &left_img, Mat &right_img) {
 
     // cout << "Left cam capture time: " << left_cap_time.count() << " ms" << endl;
     // cout << "Right cam capture time: " << right_cap_time.count() << " ms" << endl;
+
+    if(is_timestamp_init_ == false) {
+        capture_start_time_ = std::chrono::steady_clock::now();
+        timestamp = 0.0;
+        is_timestamp_init_ = true;
+    } else {
+        steady_clock::time_point cap_time = steady_clock::now();
+        duration<double> time_from_start = duration_cast<duration<double>>(cap_time - capture_start_time_);
+        timestamp = time_from_start.count();
+    }
 
     if (left_img.empty()) {
         cerr << "No data captured from left camera" << endl;

@@ -9,6 +9,8 @@
 #ifndef _STEREO_CAMERA_HPP_
 #define _STEREO_CAMERA_HPP_
 
+#include <chrono>
+
 #include <opencv2/opencv.hpp>
 
 #include "GxCamera/GxCamera.hpp"
@@ -47,7 +49,7 @@ public:
     StereoStatus StartRightCamStream();
     StereoStatus StartStereoStream();
 
-    StereoStatus GetColorImgStereo(cv::Mat &left_img, cv::Mat &right_img);
+    StereoStatus GetColorImgStereo(cv::Mat &left_img, cv::Mat &right_img, double &timestamp);
 
     StereoStatus StereoStreamOff();
     StereoStatus StereoClose();
@@ -55,6 +57,10 @@ public:
 private:
     GxCamera left_cam_;
     GxCamera right_cam_;
+
+    std::chrono::steady_clock::time_point capture_start_time_ = std::chrono::steady_clock::now();
+
+    bool is_timestamp_init_ = false;
 };
 
 }
