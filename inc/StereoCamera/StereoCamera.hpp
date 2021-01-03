@@ -18,15 +18,21 @@
 namespace StereoCamera{
 
 enum class StereoStatus{
-    kStereoSuccess = 0,
-    kCameraDriverError,
-    kSetStereoExposureFail,
-    kSetStereoFrameRateFail,
-    kStreamStartFail,
-    kExposureTimeOutOfBound,
-    kFrameRateOutOfBound,
-    kGetLeftColorImgFail,
-    kGetRightColorImgFail
+    kStereoSuccess              = 0,
+    kCameraDriverError          = 1,
+    kSetStereoExposureFail      = 2,
+    kSetStereoFrameRateFail     = 3,
+    kStreamStartFail            = 4,
+    kExposureTimeOutOfBound     = 5,
+    kFrameRateOutOfBound        = 6,
+    kGetLeftColorImgFail        = 7,
+    kGetRightColorImgFail       = 8,
+    kLoadStereoCaliDataFail     = 9,
+    kStereoCaliDataNotAvailable = 10
+};
+
+enum class FrameFormat{
+    kRGB = 0
 };
 
 class Stereo{
@@ -49,18 +55,39 @@ public:
     StereoStatus StartRightCamStream();
     StereoStatus StartStereoStream();
 
+    StereoStatus LoadStereoCaliData(const std::string cali_data_path);
+
     StereoStatus GetColorImgStereo(cv::Mat &left_img, cv::Mat &right_img, double &timestamp);
+    StereoStatus GetColorImgStereoRectified(cv::Mat &left_img, cv::Mat &right_img, double &timestamp);
 
     StereoStatus StereoStreamOff();
     StereoStatus StereoClose();
+
+    FrameFormat frame_format = FrameFormat::kRGB;
 
 private:
     GxCamera left_cam_;
     GxCamera right_cam_;
 
-    std::chrono::steady_clock::time_point capture_start_time_ = std::chrono::steady_clock::now();
+    int frame_width_;
+    int frame_height_;
+
+    cv::Mat left_cam_intrinsic_mat_;
+    cv::Mat right_cam_intrinsic_mat_;
+
+    cv::Mat left_cam_dist_param_;
+    cv::Mat right_cam_dist_param_;
+
+    cv::Mat rot_mat_; // Rotation matrix from left camera to right camera
+    cv::Mat trans_vec_; // Translation vector from left camera to right camera
+
+    // Map for undistortion and rectification
+    cv::Mat left_map1_, left_map2_, right_map1_, right_map2_;
+
+    std::chrono::steady_clock::time_point capture_start_time_;
 
     bool is_timestamp_init_ = false;
+    bool is_rectified_img_available = false;
 };
 
 }

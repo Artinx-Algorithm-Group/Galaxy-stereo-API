@@ -1,3 +1,11 @@
+/**
+ * @file    StereoCamera.cc
+ * @brief   Class implementation for stereo driver
+ * @author  Jing Yonglin
+ * @mail:   11712605@mail.sustech.edu.cn
+ *          yonglinjing7@gmail.com
+*/
+
 #include <iostream>
 #include <type_traits>
 #include <opencv2/opencv.hpp>
@@ -7,7 +15,6 @@
 #include "GxCamera/GxCamera.hpp"
 
 using std::string;
-using std::remove_const;
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -18,7 +25,12 @@ using std::chrono::steady_clock;
 using std::chrono::duration_cast;
 
 using cv::Mat;
+using cv::Mat_;
 using cv::cvtColor;
+using cv::stereoRectify;
+using cv::Size;
+using cv::initUndistortRectifyMap;
+using cv::remap;
 
 using StereoCamera::Stereo;
 using StereoCamera::StereoStatus;
@@ -180,7 +192,61 @@ StereoStatus Stereo::StartStereoStream() {
         return StereoStatus::kSetStereoFrameRateFail;
     }
 
-    return StereoStatus::kStreamStartFail;
+    return StereoStatus::kStereoSuccess;
+}
+
+StereoStatus Stereo::LoadStereoCaliData(const std::string cali_data_path) {
+    cv::FileStorage cali_data(cali_data_path, cv::FileStorage::READ);
+
+    if(!cali_data.isOpened()){
+        cerr << "ERROR: Wrong path to calibration data" << endl;
+        return StereoStatus::kLoadStereoCaliDataFail;
+    }
+
+    cali_data["LEFT.K"] >> this->left_cam_intrinsic_mat_;
+    cali_data["LEFT.D"] >> this->left_cam_dist_param_;
+    cali_data["RIGHT.K"] >> this->right_cam_intrinsic_mat_;
+    cali_data["RIGHT.D"] >> this->right_cam_dist_param_;
+
+    cali_data["R"] >> this->rot_mat_;
+    cali_data["TRANS"] >> this->trans_vec_;
+
+    // cout << "Left camera intrinsic:" << endl << this->left_cam_intrinsic_mat_ << endl;
+    // cout << "Right camera intrinsic:" << endl << this->right_cam_intrinsic_mat_ << endl;
+    // cout << "Left camera distortion:" << endl << this->left_cam_dist_param_ << endl;
+    // cout << "Right camera distortion:" << endl << this->right_cam_dist_param_ << endl;
+
+    // cout << "Rotation:" << endl << this->rot_mat_ << endl;
+    // cout << "Translation:" << endl << this->trans_vec_ << endl;
+
+    this->frame_width_ = cali_data["Frame.width"];
+    this->frame_height_ = cali_data["Frame.height"];
+
+    Mat R1, R2, P1, P2, Q;
+    stereoRectify(this->left_cam_intrinsic_mat_, this->left_cam_dist_param_, 
+                  this->right_cam_intrinsic_mat_, this->right_cam_dist_param_,
+                  Size(this->frame_width_, this->frame_height_),
+                  this->rot_mat_, this->trans_vec_,
+                  R1, R2, P1, P2, Q);
+
+    initUndistortRectifyMap(this->left_cam_intrinsic_mat_, this->left_cam_dist_param_, 
+                            R1, P1, cv::Size(this->frame_width_, this->frame_height_),
+                            CV_32F, this->left_map1_, this->left_map2_);
+
+    initUndistortRectifyMap(this->right_cam_intrinsic_mat_, this->right_cam_dist_param_,
+                            R2, P2, cv::Size(this->frame_width_, this->frame_height_),
+                            CV_32F, this->right_map1_, this->right_map2_);
+
+    // cout << "Left_map1: " << endl << this->left_map1_ << endl;
+    // cout << "Left_map2: " << endl << this->left_map2_ << endl;
+    // cout << "Right_map1: " << endl << this->right_map1_ << endl;
+    // cout << "Right_map2: " << endl << this->right_map2_ << endl;
+
+    this->is_rectified_img_available = true;
+
+    cout << "calibration data loaded" << endl;
+
+    return StereoStatus::kStereoSuccess;
 }
 
 StereoStatus Stereo::GetColorImgStereo(Mat &left_img, Mat &right_img, double &timestamp) {
@@ -216,8 +282,23 @@ StereoStatus Stereo::GetColorImgStereo(Mat &left_img, Mat &right_img, double &ti
         return StereoStatus::kGetRightColorImgFail;
     }
 
-    cvtColor(left_img, left_img, cv::COLOR_RGB2BGR);
-    cvtColor(right_img, right_img, cv::COLOR_RGB2BGR);
+    // cvtColor(left_img, left_img, cv::COLOR_RGB2BGR);
+    // cvtColor(right_img, right_img, cv::COLOR_RGB2BGR);
+
+    return StereoStatus::kStereoSuccess;
+}
+
+StereoStatus Stereo::GetColorImgStereoRectified(cv::Mat &left_img, cv::Mat &right_img, double &timestamp) {
+    this->GetColorImgStereo(left_img, right_img, timestamp);
+
+    if(! this->is_rectified_img_available) {
+        cerr << "ERROR: Cannot get rectified stereo image pair, calibration data not available." 
+             << " ORIGINAL IMAGE RETURNED" << endl;
+        return StereoStatus::kStereoCaliDataNotAvailable;
+    }
+
+    remap(left_img, left_img, this->left_map1_, this->left_map2_, cv::INTER_LINEAR);
+    remap(right_img, right_img, this->right_map1_, this->right_map2_, cv::INTER_LINEAR);
 
     return StereoStatus::kStereoSuccess;
 }
