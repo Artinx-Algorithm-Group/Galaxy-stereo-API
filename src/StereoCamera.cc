@@ -229,6 +229,9 @@ StereoStatus Stereo::LoadStereoCaliData(const std::string cali_data_path) {
                   this->rot_mat_, this->trans_vec_,
                   R1, R2, P1, P2, Q);
 
+    cout << "New intrinsics matrix P1:" << endl << P1 << endl;
+    cout << "New intrinsics matrix P2:" << endl << P2 << endl;
+
     initUndistortRectifyMap(this->left_cam_intrinsic_mat_, this->left_cam_dist_param_, 
                             R1, P1, cv::Size(this->frame_width_, this->frame_height_),
                             CV_32F, this->left_map1_, this->left_map2_);

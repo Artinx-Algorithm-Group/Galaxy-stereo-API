@@ -33,3 +33,16 @@ target_link_libraries(
         ${OpenCV_LIBS}
         libgxiapi.so          # /usr/lib/libgxiapi.so
 )
+
+add_executable(
+    StereoTestFPS
+        ${PROJECT_SOURCE_DIR}/src/GxCamera.cc
+        ${PROJECT_SOURCE_DIR}/src/StereoCamera.cc
+        ${PROJECT_SOURCE_DIR}/sample/StereoTestFPS.cc
+)
+
+target_link_libraries(
+    StereoTestFPS 
+        ${OpenCV_LIBS}
+        libgxiapi.so          # /usr/lib/libgxiapi.so
+)
