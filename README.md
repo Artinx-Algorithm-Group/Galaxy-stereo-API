@@ -9,3 +9,8 @@ Please refer to the [smaples](smaple/).
 ## Documentation
 
 * [Stereo Rectification](./doc/StereoRectify.md)
+
+## TODO
+
+* Camera sycnazation
+* Data record feature
