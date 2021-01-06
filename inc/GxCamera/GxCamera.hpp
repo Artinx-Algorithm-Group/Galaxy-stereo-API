@@ -1,214 +1,89 @@
 /**
  * @file    GxCamera.hpp
- * @brief   This file is specific for the case that only one Daheng-color-camera connected
- * @author  Lin Zijun
- *              mail:   11810710@mail.sustech.edu.cn
- *                      1774525013@qq.com
+ * @brief   Class declaration for DaHeng usb3.0 camera
+ * @author  Jing Yonglin
+ * @mail:   11712605@mail.sustech.edu.cn
+ *          yonglinjing7@gmail.com
 */
-
 
 #ifndef _GXCAMERA_HPP_
 #define _GXCAMERA_HPP_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <time.h>
 #include <opencv2/opencv.hpp>
 
-#include "GxCamera/GxIAPI.h"
-#include "GxCamera/DxImageProc.h"
+#include "GxIAPI.h"
+#include "DxImageProc.h"
 
-/// These are not recommended to modify
-#define ACQ_BUFFER_NUM          5               ///< Acquisition Buffer Qty.
-#define ACQ_TRANSFER_SIZE       (64 * 1024)     ///< Size of data transfer block
-#define ACQ_TRANSFER_NUMBER_URB 64              ///< Qty. of data transfer block
+namespace GxCamera {
 
-#define PIXFMT_CVT_FAIL             -1             ///< PixelFormatConvert fail
-#define PIXFMT_CVT_SUCCESS          0              ///< PixelFormatConvert success
+enum class ImageFormatConvertStatus;
+class GxException;
 
-#define EXPOSURE_TIME_MAX 1000000.0
-#define EXPOSURE_TIME_MIN 20.0
+class Camera{
 
-#define FRAME_RATE_MAX 10000.0                  /// Max frame rate (not practical)
-#define FRAME_RATE_MIN 0.1                      /// Min frame rate
+public:
 
+    GX_STATUS CameraInit();
+    GX_STATUS CameraInit(char *serial_num);
 
+    GX_STATUS SetExposureTime(double exposure_time);
+    GX_STATUS SetFrameRate(double frame_rate);
 
-/// @brief For users, in other functions or in main, show error and return
-/// @return GX_STATUS , the return code of main
-#define GX_CHECK(emStatus) \
-    if (emStatus != GX_STATUS_SUCCESS)      \
-    {                                       \
-        printf("<GX_CHECK>\n");            \
-        return emStatus;                    \
-    }                                       \
-    
-/// @brief  Not for users. Used in this class, in init steps , show error and do exit ops
-///         For functions before PreForAcquisition()
-/// @return GX_STATUS
-#define GX_INIT_VERIFY_EXIT(emStatus) \
-    if (emStatus != GX_STATUS_SUCCESS)          \
-    {                                           \
-        printf("<GX_INIT_VERIFY_EXIT>\n");   \
-        GetErrorString(emStatus);               \
-        GXCloseDevice(this->hDevice);           \
-        this->hDevice = NULL;                   \
-        GXCloseLib();                           \
-        printf("<App Exit!>\n");                \
-        return emStatus;                        \
-    }
+    GX_STATUS CameraStreamOn();
+    GX_STATUS CameraStreamOff();
 
-/// @brief  Not for users. Used in this class, in running steps , show error
-///         For functions after PreForAcquisition()
-/// @return GX_STATUS
-#define GX_RUNNING_VERIFY(emStatus) \
-    if (emStatus != GX_STATUS_SUCCESS)              \
-    {                                               \
-        printf("<GX_RUNNING_VERIFY>\n");            \
-        GetErrorString(emStatus);                   \
-        return emStatus;                            \
-    }
+    GX_STATUS CameraClose();
 
-/// @brief  Not for Users. Used in this class, in running steps , show error and do exit ops
-///         For functions after PreForAcquisition()
-/// @return GX_STATUS
-#define GX_RUNNING_VERIFY_EXIT(emStatus) \
-    if (emStatus != GX_STATUS_SUCCESS)              \
-    {                                               \
-        printf("<GX_RUNNING_VERIFY_EXIT>\n");       \
-        GetErrorString(emStatus);                   \
-        this->UnPreForAcquisition();                \
-        GXCloseDevice(this->hDevice);               \
-        this->hDevice = NULL;                       \
-        GXCloseLib();                               \
-        printf("<App Exit!>\n");                    \
-        return emStatus;                            \
-    }
+    GX_STATUS GetLatestColorImg(cv::Mat &color_img);
 
+    static bool is_lib_init_;
 
+private:
+    GX_STATUS CameraOpenDevice();  // Init as the first camera in device list
+    GX_STATUS CameraOpenDevice(char *serial_num);  // Init with serial number
 
+    GX_STATUS PrintCameraInfo();
 
+    GX_STATUS CheckBasicProperties();
+    GX_STATUS SetWorkingProperties();
 
+    GX_STATUS CameraCloseDevice();
 
-void GetErrorString(GX_STATUS emErrorStatus);
+    ImageFormatConvertStatus ImageFormatConvert(PGX_FRAME_BUFFER &frame_buffer);
 
-class GxCamera
-{
-    private:
-    GX_DEV_HANDLE hDevice = NULL;
-    uint32_t nDeviceNum = 0;
-    bool bColorFilter = 0;
-    int64_t i64ColorFilter = GX_COLOR_FILTER_NONE;
-    int64_t nPayloadSize = 0;
+    void AllocImgBufferMem();
+    void DeallocImgBufferMem();
 
-    PGX_FRAME_BUFFER pFrameBuffer = NULL;
-    unsigned char* pRaw8ImgBuff = NULL;
-    unsigned char* pRgb24ImgBuff = NULL;
+    int64_t color_filter_ = GX_COLOR_FILTER_NONE;
+    int64_t payload_size_ = 0;
 
-    /// Init functions
-    int InitCameraDefault();        // Used in the case that only one device connected
-    int InitCameraSerialNumber(char *serial_num);
-    int GetMyCameraInfo();
-    int CheckBasicProperties();
-    int SetWorkingProperties();
-    void PreForAcquisition();       // Allocate memory for buff pointers
+    // PGX_FRAME_BUFFER frame_buffer_ = NULL;
 
-    /// Close functions    
-    void UnPreForAcquisition();     // DeAllocate memory for buff ponters
-    int UnInitCameraDefault();
+    unsigned char* raw8_img_buff_ = NULL;
+    unsigned char* rgb24_img_buff_ = NULL;
 
-    /// Operation functions
-    int PixelFormatConvert(); 
-
-
-
-    public:
-    GX_STATUS camStatus = GX_STATUS_SUCCESS;
-
-    GxCamera(){}
-    ~GxCamera(){}
-
-    /*************************************************
-        Function: 
-        Description: 
-        Input: 
-        Output: 
-        Others: 
-    *************************************************/
-
-    /*************************************************
-        Function: CameraInitOps
-        Description: Operations to init camera. A pack of init functions.
-        Input: None
-        Output: status
-        Others: This function is specific for the case that only one camera connected.
-    *************************************************/
-    int CameraInitOps();
-    int CameraInitOpsSerialNumber(char *serial_num);
-
-    /*************************************************
-        Function: CameraCloseOps
-        Description: Operations to close camera. A pack of close functions.
-        Input: None
-        Output: status
-        Others: None
-    *************************************************/
-    int CameraCloseOps();
-      
-    /*************************************************
-        Function: StreamOn
-        Description: Start the acquisition stream
-        Input: None
-        Output: status
-        Others: None
-    *************************************************/
-    int StreamOn();
-
-    /*************************************************
-        Function: StreamOff
-        Description: Close the acquisition stream
-        Input: None
-        Output: status
-        Others: None
-    *************************************************/
-    int StreamOff();
-    
-    /*************************************************
-        Function: GetColorImg
-        Description: To get a color frame
-        Input: cv::Mat to store frame data
-        Output: None
-        Others: None
-    *************************************************/          
-    void GetColorImg(cv::Mat &pframe);      // Get color image
-
-    /*************************************************
-        Function: SetExposureTime
-        Description: Set exposure time
-        Input: exTime - exposure time
-        Output: status
-        Others: None
-    *************************************************/
-    int SetExposureTime(int exTime); 
-
-    /*************************************************
-        Function: SetFrameRate
-        Description: Set frame rate
-        Input: frRate - frame rate
-        Output: status
-        Others: None
-    *************************************************/
-    int SetFrameRate(int frRate); 
-    
-    // set gain
-
-    // set white balance
-
-    // set resolution
-
-    // ...
+    GX_DEV_HANDLE device_handle_ = NULL;
 };
 
+enum class ImageFormatConvertStatus{
+    kImageFormatConvertFail = -1,
+    kImageFormatConvertSuccess = 0
+};
+
+// Used to handle driver status exception
+class GxException : public std::exception {
+
+public:
+    GxException(GX_STATUS error_status) : error_status_(error_status){};
+    virtual const char* what() const throw();
+
+private:
+    const char* GetErrorString(GX_STATUS emErrorStatus) const;
+
+    GX_STATUS error_status_;
+
+};
+
+}
 
 #endif

@@ -66,8 +66,8 @@ public:
     FrameFormat frame_format = FrameFormat::kRGB;
 
 private:
-    GxCamera left_cam_;
-    GxCamera right_cam_;
+    GxCamera::Camera left_cam_;
+    GxCamera::Camera right_cam_;
 
     int frame_width_;
     int frame_height_;
