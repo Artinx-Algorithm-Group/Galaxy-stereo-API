@@ -9,7 +9,6 @@ Please refer to the [samples](sample/).
 ## Documentation
 
 * [Stereo Rectification](./doc/StereoRectify.md)
-<<<<<<< HEAD
 
 ## TODO
 
