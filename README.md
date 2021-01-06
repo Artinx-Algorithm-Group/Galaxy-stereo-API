@@ -15,5 +15,3 @@ Please refer to the [samples](sample/).
 
 * Camera sycnazation
 * Data record feature
-=======
->>>>>>> d0c81d102b22d634316c2a2aeb12ec63302491ca
