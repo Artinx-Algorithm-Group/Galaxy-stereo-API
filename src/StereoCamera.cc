@@ -23,6 +23,7 @@ using std::endl;
 using std::chrono::duration;
 using std::chrono::steady_clock;
 using std::chrono::duration_cast;
+using std::chrono::microseconds;
 
 using cv::Mat;
 using cv::Mat_;
@@ -35,77 +36,79 @@ using cv::remap;
 using StereoCamera::Stereo;
 using StereoCamera::StereoStatus;
 
-namespace {
-    const uint32_t kExposureTimeUpperLimit = 1000000;
-    const uint32_t kExposureTimeLowerLimit = 20;
-    const uint8_t kFrameRateUpperLimit = 200;
-    const uint8_t kFrameRateLowerLimit = 1;
-}
+// namespace {
+//     const double kExposureTimeUpperLimit = 1000000;
+//     const double kExposureTimeLowerLimit = 20;
+//     const uint8_t kFrameRateUpperLimit = 400;
+//     const uint8_t kFrameRateLowerLimit = 1;
+// }
 
 StereoStatus Stereo::StereoInitSerialNumber(char *left_cam_serial_num, 
                                             char *right_cam_serial_num) {
     GX_STATUS status = GX_STATUS_SUCCESS;
 
-    status = this->left_cam_.CameraInit(left_cam_serial_num);
+    // Open with soft trigger mode by default
 
-    status = this->right_cam_.CameraInit(right_cam_serial_num);
+    status = this->left_cam_.CameraInit(left_cam_serial_num, true);
+
+    status = this->right_cam_.CameraInit(right_cam_serial_num, true);
 
     if(status != GX_STATUS_SUCCESS) {
-        cerr << "Left camera initialization fail, error code: " 
+        cerr << "[StereoCam] Left camera initialization fail, error code: " 
              << status << endl;
         return StereoStatus::kCameraDriverError;
     } else if (status != GX_STATUS_SUCCESS){
-        cerr << "Right camera initialization fail, error code: " 
+        cerr << "[StereoCam] Right camera initialization fail, error code: " 
              << status << endl;
         return StereoStatus::kCameraDriverError;
     } else {
-        cout << "Stereo camera initialization success" << endl;
+        cout << "[StereoCam] Stereo camera initialization success" << endl;
     }
 
     return StereoStatus::kStereoSuccess;
 }
 
-StereoStatus Stereo::SetLeftCamExposureTime(const uint32_t exposure_time) {
-    if(exposure_time < kExposureTimeLowerLimit || exposure_time > kExposureTimeUpperLimit) {
-        cerr << "Exposure time out Of bound" << endl;
-        return StereoStatus::kExposureTimeOutOfBound;
-    }
+StereoStatus Stereo::SetLeftCamExposureTime(const double exposure_time) {
+    // if(exposure_time < kExposureTimeLowerLimit || exposure_time > kExposureTimeUpperLimit) {
+    //     cerr << "[StereoCam] Exposure time out Of bound" << endl;
+    //     return StereoStatus::kExposureTimeOutOfBound;
+    // }
 
     GX_STATUS status = GX_STATUS_SUCCESS;
 
     status = this->left_cam_.SetExposureTime(exposure_time);
 
     if(status != GX_STATUS_SUCCESS) {
-        cerr << "Set left camera exposure time fail, error code: "
+        cerr << "[StereoCam] Set left camera exposure time fail, error code: "
              << status << endl;
         return StereoStatus::kCameraDriverError;
     }
 
-    cout << "Left camera exposure time set to " << exposure_time << endl;
+    cout << "[StereoCam] Left camera exposure time set to " << exposure_time << endl;
     return StereoStatus::kStereoSuccess;
 }
 
-StereoStatus Stereo::SetRightCamExposureTime(const uint32_t exposure_time) {
-    if(exposure_time < kExposureTimeLowerLimit || exposure_time > kExposureTimeUpperLimit) {
-        cerr << "Exposure time out Of bound" << endl;
-        return StereoStatus::kExposureTimeOutOfBound;
-    }
+StereoStatus Stereo::SetRightCamExposureTime(const double exposure_time) {
+    // if(exposure_time < kExposureTimeLowerLimit || exposure_time > kExposureTimeUpperLimit) {
+    //     cerr << "[StereoCam] Exposure time out Of bound" << endl;
+    //     return StereoStatus::kExposureTimeOutOfBound;
+    // }
 
     GX_STATUS status = GX_STATUS_SUCCESS;
 
     status = this->right_cam_.SetExposureTime(exposure_time);
 
     if(status != GX_STATUS_SUCCESS) {
-        cerr << "Set right camera exposure time fail, error code "
+        cerr << "[StereoCam] Set right camera exposure time fail, error code "
              << status << endl;
         return StereoStatus::kCameraDriverError;
     }
 
-    cout << "Right camera exposure time set to " << exposure_time << endl;
+    cout << "[StereoCam] Right camera exposure time set to " << exposure_time << endl;
     return StereoStatus::kStereoSuccess;
 }
 
-StereoStatus Stereo::SetStereoCamExposureTime(const uint32_t exposure_time) {
+StereoStatus Stereo::SetStereoCamExposureTime(const double exposure_time) {
     StereoStatus left_ret = this->SetLeftCamExposureTime(exposure_time);
     StereoStatus right_ret = this->SetRightCamExposureTime(exposure_time);
 
@@ -116,46 +119,46 @@ StereoStatus Stereo::SetStereoCamExposureTime(const uint32_t exposure_time) {
     return StereoStatus::kStereoSuccess;
 }
 
-StereoStatus Stereo::SetLeftCamFrameRate(const uint16_t frame_rate) {
-    if(frame_rate < kFrameRateLowerLimit || frame_rate > kFrameRateUpperLimit) {
-        cerr << "Frame rate out Of bound" << endl;
-        return StereoStatus::kFrameRateOutOfBound;
-    }
+StereoStatus Stereo::SetLeftCamFrameRate(const double frame_rate) {
+    // if(frame_rate < kFrameRateLowerLimit || frame_rate > kFrameRateUpperLimit) {
+    //     cerr << "[StereoCam] Frame rate out Of bound" << endl;
+    //     return StereoStatus::kFrameRateOutOfBound;
+    // }
 
     GX_STATUS status = GX_STATUS_SUCCESS;
 
     status = this->left_cam_.SetFrameRate(frame_rate);
     if(status != GX_STATUS_SUCCESS) {
-        cerr << "Set left camera frame rate fail, error code "
+        cerr << "[StereoCam] Set left camera frame rate fail, error code "
              << status << endl;
         return StereoStatus::kCameraDriverError;
     }
 
-    cout << "Left camera frame rate set to " << frame_rate << endl;
+    cout << "[StereoCam] Left camera frame rate set to " << frame_rate << endl;
     return StereoStatus::kStereoSuccess;
 
 }
 
-StereoStatus Stereo::SetRightCamFrameRate(const uint16_t frame_rate) {
-    if(frame_rate < kFrameRateLowerLimit || frame_rate > kFrameRateUpperLimit) {
-        cerr << "Frame rate out Of bound" << endl;
-        return StereoStatus::kFrameRateOutOfBound;
-    }
+StereoStatus Stereo::SetRightCamFrameRate(const double frame_rate) {
+    // if(frame_rate < kFrameRateLowerLimit || frame_rate > kFrameRateUpperLimit) {
+    //     cerr << "[StereoCam] Frame rate out Of bound" << endl;
+    //     return StereoStatus::kFrameRateOutOfBound;
+    // }
 
     GX_STATUS status = GX_STATUS_SUCCESS;
 
     status = this->right_cam_.SetFrameRate(frame_rate);
     if(status != GX_STATUS_SUCCESS) {
-        cerr << "Set right camera frame rate fail, error code "
+        cerr << "[StereoCam] Set right camera frame rate fail, error code "
              << status << endl;
         return StereoStatus::kCameraDriverError;
     }
 
-    cout << "Right camera frame rate set to " << frame_rate << endl;
+    cout << "[StereoCam] Right camera frame rate set to " << frame_rate << endl;
     return StereoStatus::kStereoSuccess;
 }
 
-StereoStatus Stereo::SetStereoCamFrameRate(const uint16_t frame_rate) {
+StereoStatus Stereo::SetStereoCamFrameRate(const double frame_rate) {
     StereoStatus left_ret = this->SetLeftCamFrameRate(frame_rate);
     StereoStatus right_ret = this->SetRightCamFrameRate(frame_rate);
 
@@ -172,12 +175,12 @@ StereoStatus Stereo::StartLeftCamStream() {
     status = this->left_cam_.CameraStreamOn();
 
     if(status != GX_STATUS_SUCCESS) {
-        cerr << "Start left camera stream fail, error code "
+        cerr << "[StereoCam] Start left camera stream fail, error code "
              << status << endl;
         return StereoStatus::kCameraDriverError;
     }
 
-    cout << "Left camera stream start" << endl;
+    cout << "[StereoCam] Left camera stream start" << endl;
     return StereoStatus::kStereoSuccess;
 }
 
@@ -187,12 +190,12 @@ StereoStatus Stereo::StartRightCamStream() {
     status = this->right_cam_.CameraStreamOn();
 
     if(status != GX_STATUS_SUCCESS) {
-        cerr << "Start right camera stream fail, error code "
+        cerr << "[StereoCam] Start right camera stream fail, error code "
              << status << endl;
         return StereoStatus::kCameraDriverError;
     }
 
-    cout << "Right camera stream start" << endl;
+    cout << "[StereoCam] Right camera stream start" << endl;
     return StereoStatus::kStereoSuccess;
 }
 
@@ -211,7 +214,7 @@ StereoStatus Stereo::LoadStereoCaliData(const std::string cali_data_path) {
     cv::FileStorage cali_data(cali_data_path, cv::FileStorage::READ);
 
     if(!cali_data.isOpened()){
-        cerr << "ERROR: Wrong path to calibration data" << endl;
+        cerr << "[StereoCam] ERROR: Wrong path to calibration data" << endl;
         return StereoStatus::kLoadStereoCaliDataFail;
     }
 
@@ -241,8 +244,8 @@ StereoStatus Stereo::LoadStereoCaliData(const std::string cali_data_path) {
                   this->rot_mat_, this->trans_vec_,
                   R1, R2, P1, P2, Q);
 
-    cout << "New intrinsics matrix P1:" << endl << P1 << endl;
-    cout << "New intrinsics matrix P2:" << endl << P2 << endl;
+    cout << "[StereoCam] New intrinsics matrix P1:" << endl << P1 << endl;
+    cout << "[StereoCam] New intrinsics matrix P2:" << endl << P2 << endl;
 
     initUndistortRectifyMap(this->left_cam_intrinsic_mat_, this->left_cam_dist_param_, 
                             R1, P1, cv::Size(this->frame_width_, this->frame_height_),
@@ -259,7 +262,29 @@ StereoStatus Stereo::LoadStereoCaliData(const std::string cali_data_path) {
 
     this->is_rectified_img_available = true;
 
-    cout << "calibration data loaded" << endl;
+    cout << "[StereoCam] calibration data loaded" << endl;
+
+    return StereoStatus::kStereoSuccess;
+}
+
+StereoStatus Stereo::SendSoftTrigger(){
+    GX_STATUS status = GX_STATUS_SUCCESS;
+
+    status = this->left_cam_.SendSoftTrigger();
+    status = this->right_cam_.SendSoftTrigger();
+
+    if(status != GX_STATUS_SUCCESS){
+        cerr << "[StereoCam] Send soft trigger fail" << endl;
+        return StereoStatus::kSendSoftTriggerFail;
+    }
+
+    if(!is_timestamp_init_) {
+        this->capture_start_time_ = std::chrono::steady_clock::now();
+        this->last_trigger_time_ = this->capture_start_time_;
+        is_timestamp_init_ = true;
+    } else {
+        this->last_trigger_time_ = steady_clock::now();
+    }
 
     return StereoStatus::kStereoSuccess;
 }
@@ -269,31 +294,24 @@ StereoStatus Stereo::GetColorImgStereo(Mat &left_img, Mat &right_img, double &ti
     // steady_clock::time_point left_cam_cap_start = steady_clock::now();
     this->left_cam_.GetLatestColorImg(left_img);
     // steady_clock::time_point left_cam_cap_end = steady_clock::now();
-    // milliseconds left_cap_time = duration_cast<milliseconds>(left_cam_cap_end - left_cam_cap_start);
+    // microseconds left_cap_time = duration_cast<microseconds>(left_cam_cap_end - left_cam_cap_start);
 
     // steady_clock::time_point right_cam_cap_start = steady_clock::now();
     this->right_cam_.GetLatestColorImg(right_img);
     // steady_clock::time_point right_cam_cap_end = steady_clock::now();
-    // milliseconds right_cap_time = duration_cast<milliseconds>(right_cam_cap_end - right_cam_cap_start);
+    // microseconds right_cap_time = duration_cast<microseconds>(right_cam_cap_end - right_cam_cap_start);
 
-    // cout << "Left cam capture time: " << left_cap_time.count() << " ms" << endl;
-    // cout << "Right cam capture time: " << right_cap_time.count() << " ms" << endl;
+    // cout << "[StereoCam] Left cam capture time: " << left_cap_time.count() << " us" << endl;
+    // cout << "[StereoCam] Right cam capture time: " << right_cap_time.count() << " us" << endl;
 
-    if(is_timestamp_init_ == false) {
-        capture_start_time_ = std::chrono::steady_clock::now();
-        timestamp = 0.0;
-        is_timestamp_init_ = true;
-    } else {
-        steady_clock::time_point cap_time = steady_clock::now();
-        duration<double> time_from_start = duration_cast<duration<double>>(cap_time - capture_start_time_);
-        timestamp = time_from_start.count();
-    }
+    duration<double> time_from_start = duration_cast<duration<double>>(this->last_trigger_time_ - this->capture_start_time_);
+    timestamp = time_from_start.count();
 
     if (left_img.empty()) {
-        cerr << "No data captured from left camera" << endl;
+        cerr << "[StereoCam] No data captured from left camera" << endl;
         return StereoStatus::kGetLeftColorImgFail;
     } else if (right_img.empty()) {
-        cerr << "No data captured from right camera" << endl;
+        cerr << "[StereoCam] No data captured from right camera" << endl;
         return StereoStatus::kGetRightColorImgFail;
     }
 
@@ -307,7 +325,7 @@ StereoStatus Stereo::GetColorImgStereoRectified(cv::Mat &left_img, cv::Mat &righ
     this->GetColorImgStereo(left_img, right_img, timestamp);
 
     if(! this->is_rectified_img_available) {
-        cerr << "ERROR: Cannot get rectified stereo image pair, calibration data not available." 
+        cerr << "[StereoCam] ERROR: Cannot get rectified stereo image pair, calibration data not available." 
              << " ORIGINAL IMAGE RETURNED" << endl;
         return StereoStatus::kStereoCaliDataNotAvailable;
     }
@@ -326,16 +344,16 @@ StereoStatus Stereo::StereoStreamOff() {
     right_status = this->right_cam_.CameraStreamOff();
 
     if (left_status != GX_STATUS_SUCCESS) {
-        cerr << "Fail to turn off left camera stream, error code "
+        cerr << "[StereoCam] Fail to turn off left camera stream, error code "
              << left_status << endl;
         return StereoStatus::kCameraDriverError;
     } else if (right_status != GX_STATUS_SUCCESS) {
-        cerr << "Fail to turn off right camera stream, error code "
+        cerr << "[StereoCam] Fail to turn off right camera stream, error code "
              << right_status << endl;
         return StereoStatus::kCameraDriverError;
     }
 
-    cout << "Stereo stream turned off" << endl;
+    cout << "[StereoCam] Stereo stream turned off" << endl;
     return StereoStatus::kStereoSuccess;
 }
 
@@ -347,15 +365,15 @@ StereoStatus Stereo::StereoClose() {
     right_status = this->right_cam_.CameraClose();
 
     if (left_status != GX_STATUS_SUCCESS) {
-        cerr << "Fail to turn off left camera stream, error code "
+        cerr << "[StereoCam] Fail to turn off left camera stream, error code "
              << left_status << endl;
         return StereoStatus::kCameraDriverError;
     } else if (right_status != GX_STATUS_SUCCESS) {
-        cerr << "Fail to turn off right camera stream, error code "
+        cerr << "[StereoCam] Fail to turn off right camera stream, error code "
              << right_status << endl;
         return StereoStatus::kCameraDriverError;
     }
 
-    cout << "Stereo camera successfully closed" << endl;
+    cout << "[StereoCam] Stereo camera successfully closed" << endl;
     return StereoStatus::kStereoSuccess;
 }

@@ -15,8 +15,8 @@ using cv::Mat;
 using StereoCamera::StereoStatus;
 
 namespace {
-    const uint32_t kExposureTime = 10000;
-    const uint16_t kFrameRate = 150;
+    const uint32_t kExposureTime = 20.0;
+    const uint16_t kFrameRate = 180.0;
 
     // c-style string serial number for code compatibility
     char left_cam_serial_num[] = "KE0200080465";
@@ -56,8 +56,10 @@ int main(int argc, char **argv) {
     int frame_count = 0;
 
     signal(SIGINT, SigintHandler);
+    stereo.SendSoftTrigger();
     stereo.GetColorImgStereoRectified(left_rect, right_rect, start_point);
     while (!stop_flag){
+        stereo.SendSoftTrigger();
         stereo.GetColorImgStereoRectified(left_rect, right_rect, timestamp);
         frame_count += 1;
         if(timestamp - start_point > 1.0){

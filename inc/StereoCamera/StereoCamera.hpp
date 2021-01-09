@@ -28,7 +28,8 @@ enum class StereoStatus{
     kGetLeftColorImgFail        = 7,
     kGetRightColorImgFail       = 8,
     kLoadStereoCaliDataFail     = 9,
-    kStereoCaliDataNotAvailable = 10
+    kStereoCaliDataNotAvailable = 10,
+    kSendSoftTriggerFail        = 11
 };
 
 enum class FrameFormat{
@@ -43,19 +44,21 @@ public:
     StereoStatus StereoInitSerialNumber(char *left_cam_serial_num, 
                                         char *right_cam_serial_num);
 
-    StereoStatus SetLeftCamExposureTime(const uint32_t exposure_time);
-    StereoStatus SetRightCamExposureTime(const uint32_t exposure_time);
-    StereoStatus SetStereoCamExposureTime(const uint32_t exposure_time);
+    StereoStatus SetLeftCamExposureTime(const double exposure_time);
+    StereoStatus SetRightCamExposureTime(const double exposure_time);
+    StereoStatus SetStereoCamExposureTime(const double exposure_time);
 
-    StereoStatus SetLeftCamFrameRate(const uint16_t frame_rate);
-    StereoStatus SetRightCamFrameRate(const uint16_t frame_rate);
-    StereoStatus SetStereoCamFrameRate(const uint16_t frame_rate);
+    StereoStatus SetLeftCamFrameRate(const double frame_rate);
+    StereoStatus SetRightCamFrameRate(const double frame_rate);
+    StereoStatus SetStereoCamFrameRate(const double frame_rate);
 
     StereoStatus StartLeftCamStream();
     StereoStatus StartRightCamStream();
     StereoStatus StartStereoStream();
 
     StereoStatus LoadStereoCaliData(const std::string cali_data_path);
+
+    StereoStatus SendSoftTrigger();
 
     StereoStatus GetColorImgStereo(cv::Mat &left_img, cv::Mat &right_img, double &timestamp);
     StereoStatus GetColorImgStereoRectified(cv::Mat &left_img, cv::Mat &right_img, double &timestamp);
@@ -85,6 +88,7 @@ private:
     cv::Mat left_map1_, left_map2_, right_map1_, right_map2_;
 
     std::chrono::steady_clock::time_point capture_start_time_;
+    std::chrono::steady_clock::time_point last_trigger_time_;
 
     bool is_timestamp_init_ = false;
     bool is_rectified_img_available = false;

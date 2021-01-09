@@ -24,8 +24,8 @@ using cv::Scalar;
 using StereoCamera::StereoStatus;
 
 namespace {
-    const uint32_t kExposureTime = 15000;
-    const uint16_t kFrameRate = 120;
+    const double kExposureTime = 20.0;
+    const double kFrameRate = 150.0;
 
     // c-style string serial number for code compatibility
     char left_cam_serial_num[] = "KE0200080465";
@@ -66,6 +66,7 @@ int main(int argc, char **argv) {
 
     signal(SIGINT, SigintHandler);
     while (!stop_flag){
+        stereo.SendSoftTrigger();
         stereo.GetColorImgStereoRectified(left_rect, right_rect, timestamp);
         // cout << "Timestamp in second: " << timestamp << endl;
 
