@@ -15,6 +15,7 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 set(OpenCV_DIR /home/artinx001/3rdparty/opencv-3.4.12/build)
 find_package(OpenCV 3 REQUIRED)
+find_package(Threads REQUIRED)
 
 include_directories(
     ${OpenCV_INCLUDE_DIRS}
@@ -45,4 +46,18 @@ target_link_libraries(
     StereoTestFPS 
         ${OpenCV_LIBS}
         libgxiapi.so          # /usr/lib/libgxiapi.so
+)
+
+add_executable(
+    MutiThreadCapture
+        ${PROJECT_SOURCE_DIR}/src/GxCamera.cc
+        ${PROJECT_SOURCE_DIR}/src/StereoCamera.cc
+        ${PROJECT_SOURCE_DIR}/sample/MutiThreadCapture.cc
+)
+
+target_link_libraries(
+    MutiThreadCapture 
+        ${OpenCV_LIBS}
+        libgxiapi.so          # /usr/lib/libgxiapi.so
+        Threads::Threads
 )

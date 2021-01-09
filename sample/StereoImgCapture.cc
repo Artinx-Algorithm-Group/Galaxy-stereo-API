@@ -1,6 +1,7 @@
 #include <csignal>
 #include <opencv2/opencv.hpp>
 #include <string>
+#include <chrono>
 
 #include "StereoCamera/StereoCamera.hpp"
 
@@ -9,6 +10,9 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::to_string;
+using std::chrono::steady_clock;
+using std::chrono::microseconds;
+using std::chrono::duration_cast;
 
 using cv::Mat;
 using cv::hconcat;
@@ -66,9 +70,13 @@ int main(int argc, char **argv) {
 
     signal(SIGINT, SigintHandler);
     while (!stop_flag){
+        steady_clock::time_point cap_start = steady_clock::now();
         stereo.SendSoftTrigger();
         stereo.GetColorImgStereoRectified(left_rect, right_rect, timestamp);
-        // cout << "Timestamp in second: " << timestamp << endl;
+        steady_clock::time_point right_cam_cap_end = steady_clock::now();
+        microseconds cap_time = duration_cast<microseconds>(right_cam_cap_end - cap_start);
+        cout << "Capture time: " << cap_time.count() << endl;
+        cout << "Timestamp in second: " << timestamp << endl;
 
         cvtColor(left_rect, left_rect, cv::COLOR_RGB2BGR);
         cvtColor(right_rect, right_rect, cv::COLOR_RGB2BGR);
