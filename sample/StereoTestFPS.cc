@@ -13,6 +13,7 @@ using std::to_string;
 using cv::Mat;
 
 using StereoCamera::StereoStatus;
+using StereoCamera::StereoFrame;
 
 namespace {
     const uint32_t kExposureTime = 20.0;
@@ -51,17 +52,21 @@ int main(int argc, char **argv) {
     stereo.StartStereoStream();
 
     Mat left_rect, right_rect, combined_img;
-    double timestamp = 0.0;
-    double start_point = 0.0;
+    StereoFrame stereo_frame;
+    
     int frame_count = 0;
 
     signal(SIGINT, SigintHandler);
     stereo.SendSoftTrigger();
-    stereo.GetColorImgStereoRectified(left_rect, right_rect, start_point);
+    stereo.GetColorImgStereoRectified(stereo_frame);
+
+    double start_point = stereo_frame.timestamp();
+    double timestamp = 0.0;
     while (!stop_flag){
         stereo.SendSoftTrigger();
-        stereo.GetColorImgStereoRectified(left_rect, right_rect, timestamp);
+        stereo.GetColorImgStereoRectified(stereo_frame);
         frame_count += 1;
+        timestamp = stereo_frame.timestamp();
         if(timestamp - start_point > 1.0){
             start_point = timestamp;
             cout << frame_count << " frames in last second" << endl;

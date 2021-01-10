@@ -18,7 +18,6 @@ using cv::Mat;
 using cv::hconcat;
 using cv::imshow;
 using cv::waitKey;
-using cv::resize;
 using cv::imwrite;
 using cv::cvtColor;
 using cv::line;
@@ -26,6 +25,7 @@ using cv::Point;
 using cv::Scalar;
 
 using StereoCamera::StereoStatus;
+using StereoCamera::StereoFrame;
 
 namespace {
     const double kExposureTime = 20.0;
@@ -65,26 +65,21 @@ int main(int argc, char **argv) {
 
     stereo.StartStereoStream();
 
-    Mat left_rect, right_rect, combined_img;
-    double timestamp = 0.0;
+    Mat combined_img;
+    StereoFrame stereo_frame;
 
     signal(SIGINT, SigintHandler);
     while (!stop_flag){
         steady_clock::time_point cap_start = steady_clock::now();
         stereo.SendSoftTrigger();
-        stereo.GetColorImgStereoRectified(left_rect, right_rect, timestamp);
+        stereo.GetColorImgStereoRectified(stereo_frame);
         steady_clock::time_point right_cam_cap_end = steady_clock::now();
         microseconds cap_time = duration_cast<microseconds>(right_cam_cap_end - cap_start);
         cout << "Capture time: " << cap_time.count() << endl;
-        cout << "Timestamp in second: " << timestamp << endl;
+        cout << "Timestamp in second: " << stereo_frame.timestamp() << endl;
 
-        cvtColor(left_rect, left_rect, cv::COLOR_RGB2BGR);
-        cvtColor(right_rect, right_rect, cv::COLOR_RGB2BGR);
-
-        hconcat(left_rect, right_rect, combined_img);
-
-        // Resize image for better display
-        // resize(combined_img, combined_img, cv::Size(), 0.6, 0.6);
+        hconcat(stereo_frame.left_img(), stereo_frame.right_img(), combined_img);
+        cvtColor(combined_img, combined_img, cv::COLOR_RGB2BGR);
 
         // Display horizontal line for verifying rectification result 
         Point pt1(0, combined_img.size().height / 2);
@@ -95,8 +90,8 @@ int main(int argc, char **argv) {
         imshow("Stereo output", combined_img);
         
         if(waitKey(10) == 'c') {
-            imwrite("left_" + to_string(save_frame_index) + ".png", left_rect);
-            imwrite("right_" + to_string(save_frame_index) + ".png", right_rect);
+            imwrite("cap/left_" + to_string(save_frame_index) + ".png", stereo_frame.left_img());
+            imwrite("cap/right_" + to_string(save_frame_index) + ".png", stereo_frame.right_img());
             ++save_frame_index;
             cout << "Stereo frame saved" << endl;
         }

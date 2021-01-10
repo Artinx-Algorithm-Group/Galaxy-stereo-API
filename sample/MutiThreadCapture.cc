@@ -6,17 +6,13 @@
 #include <queue>
 #include <mutex>
 
-#include "StereoCamera/StereoCamera.hpp"
+#include "StereoCamera/StereoCameraMutiThread.hpp"
 
 using std::signal;
 using std::cout;
 using std::cerr;
 using std::endl;
-using std::to_string;
 using std::thread;
-using std::queue;
-using std::mutex;
-using std::lock_guard;
 
 using std::chrono::steady_clock;
 using std::chrono::microseconds;
@@ -29,10 +25,10 @@ using cv::cvtColor;
 using cv::waitKey;
 
 using StereoCamera::StereoStatus;
+using StereoCamera::StereoMultithread;
+using StereoCamera::StereoFrame;
 
 namespace {
-    StereoCamera::Stereo stereo;
-    
     const double kExposureTime = 20.0;
     const double kFrameRate = 150.0;
 
@@ -41,12 +37,6 @@ namespace {
     char right_cam_serial_num[] = "KE0200080462";
 
     bool stop_flag = false;
-
-    mutex img_queue_mutex;
-    //mutex img_dequeue_mutex;
-
-    const int kImgQueueSize = 2;
-    queue<Mat> img_queue;
 }
 
 void SigintHandler(int sig) {
@@ -54,29 +44,9 @@ void SigintHandler(int sig) {
     cout << "SIGINT received, exiting" << endl;
 }
 
-void EnqueueImg(Mat& img){
-    lock_guard<mutex> guard(img_queue_mutex);
-    while (img_queue.size() >= kImgQueueSize){
-        img_queue.pop();
-    }
-    
-    img_queue.push(img);
-}
-
-void ImgAcquireTask(){
-
-    Mat left_rect, right_rect, combined_img;
-    double timestamp = 0.0;
-    while (!stop_flag){
-        stereo.SendSoftTrigger();
-        stereo.GetColorImgStereoRectified(left_rect, right_rect, timestamp);
-        hconcat(left_rect, right_rect, combined_img);
-        EnqueueImg(combined_img);
-    }
-    
-}
-
 int main(int argc, char **argv) {
+    StereoCamera::StereoMultithread stereo;
+
     stereo.StereoInitSerialNumber(left_cam_serial_num, right_cam_serial_num);
 
     stereo.SetStereoCamExposureTime(kExposureTime);
@@ -94,28 +64,27 @@ int main(int argc, char **argv) {
     stereo.StartStereoStream();
 
     signal(SIGINT, SigintHandler);
-    thread img_acquire_thread(ImgAcquireTask);
+    thread img_acquire_thread(&StereoMultithread::MutithreadCaptureTask, &stereo);
 
-    Mat current_img;
+    StereoFrame stereo_frame;
+    Mat combined_img;
     while (!stop_flag){
-        // steady_clock::time_point cap_start = steady_clock::now();
-        {   // Automatically destoryed when out of scope
-            lock_guard<mutex> guard(img_queue_mutex);
-
-            if(img_queue.empty()){
-                continue;
-            }
-            current_img = img_queue.front();
-            img_queue.pop();
+        if(stereo.IsBufferEmpty()){
+            continue;
         }
+        // steady_clock::time_point cap_start = steady_clock::now();
+        stereo.AcquireStereoFrameFromThread(stereo_frame);
         // steady_clock::time_point right_cam_cap_end = steady_clock::now();
         // microseconds cap_time = duration_cast<microseconds>(right_cam_cap_end - cap_start);
         // cout << "Capture time: " << cap_time.count() << " us" << endl;
 
-        cvtColor(current_img, current_img, cv::COLOR_RGB2BGR);
-        imshow("out", current_img);
+        hconcat(stereo_frame.left_img(), stereo_frame.right_img(), combined_img);
+        cvtColor(combined_img, combined_img, cv::COLOR_RGB2BGR);
+        imshow("out", combined_img);
         waitKey(10);
     }
+
+    stereo.TerminateTask();
 
     img_acquire_thread.join();
 

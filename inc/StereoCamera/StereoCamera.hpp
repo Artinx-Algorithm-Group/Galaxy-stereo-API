@@ -36,6 +36,8 @@ enum class FrameFormat{
     kRGB = 0
 };
 
+class StereoFrame;
+
 class Stereo{
 
 public:
@@ -60,8 +62,8 @@ public:
 
     StereoStatus SendSoftTrigger();
 
-    StereoStatus GetColorImgStereo(cv::Mat &left_img, cv::Mat &right_img, double &timestamp);
-    StereoStatus GetColorImgStereoRectified(cv::Mat &left_img, cv::Mat &right_img, double &timestamp);
+    StereoStatus GetColorImgStereo(StereoFrame &stereo_frame);
+    StereoStatus GetColorImgStereoRectified(StereoFrame &stereo_frame);
 
     StereoStatus StereoStreamOff();
     StereoStatus StereoClose();
@@ -72,8 +74,8 @@ private:
     GxCamera::Camera left_cam_;
     GxCamera::Camera right_cam_;
 
-    int frame_width_;
-    int frame_height_;
+    int frame_width_;  // for left and right camera
+    int frame_height_; // for left and right camera
 
     cv::Mat left_cam_intrinsic_mat_;
     cv::Mat right_cam_intrinsic_mat_;
@@ -92,6 +94,22 @@ private:
 
     bool is_timestamp_init_ = false;
     bool is_rectified_img_available = false;
+};
+
+class StereoFrame{
+public:
+    StereoFrame() = default;
+    StereoFrame(cv::Mat& left_img, cv::Mat& right_img, double timestamp) : 
+        left_img_(left_img), right_img_(right_img), timestamp_(timestamp){};
+
+    cv::Mat left_img();
+    cv::Mat right_img();
+    double timestamp();
+
+private:
+    cv::Mat left_img_;
+    cv::Mat right_img_;
+    double timestamp_;
 };
 
 }

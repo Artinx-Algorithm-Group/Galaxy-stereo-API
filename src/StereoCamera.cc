@@ -35,6 +35,7 @@ using cv::remap;
 
 using StereoCamera::Stereo;
 using StereoCamera::StereoStatus;
+using StereoCamera::StereoFrame;
 
 // namespace {
 //     const double kExposureTimeUpperLimit = 1000000;
@@ -289,8 +290,10 @@ StereoStatus Stereo::SendSoftTrigger(){
     return StereoStatus::kStereoSuccess;
 }
 
-StereoStatus Stereo::GetColorImgStereo(Mat &left_img, Mat &right_img, double &timestamp) {
+StereoStatus Stereo::GetColorImgStereo(StereoFrame &stereo_frame) {
 
+    Mat left_img, right_img;
+    double timestamp;
     // steady_clock::time_point left_cam_cap_start = steady_clock::now();
     this->left_cam_.GetLatestColorImg(left_img);
     // steady_clock::time_point left_cam_cap_end = steady_clock::now();
@@ -307,6 +310,9 @@ StereoStatus Stereo::GetColorImgStereo(Mat &left_img, Mat &right_img, double &ti
     duration<double> time_from_start = duration_cast<duration<double>>(this->last_trigger_time_ - this->capture_start_time_);
     timestamp = time_from_start.count();
 
+    StereoFrame _stereo_frame(left_img, right_img, timestamp);
+    stereo_frame = _stereo_frame;
+
     if (left_img.empty()) {
         cerr << "[StereoCam] No data captured from left camera" << endl;
         return StereoStatus::kGetLeftColorImgFail;
@@ -321,8 +327,9 @@ StereoStatus Stereo::GetColorImgStereo(Mat &left_img, Mat &right_img, double &ti
     return StereoStatus::kStereoSuccess;
 }
 
-StereoStatus Stereo::GetColorImgStereoRectified(cv::Mat &left_img, cv::Mat &right_img, double &timestamp) {
-    this->GetColorImgStereo(left_img, right_img, timestamp);
+StereoStatus Stereo::GetColorImgStereoRectified(StereoFrame& stereo_frame) {
+
+    this->GetColorImgStereo(stereo_frame);
 
     if(! this->is_rectified_img_available) {
         cerr << "[StereoCam] ERROR: Cannot get rectified stereo image pair, calibration data not available." 
@@ -330,8 +337,8 @@ StereoStatus Stereo::GetColorImgStereoRectified(cv::Mat &left_img, cv::Mat &righ
         return StereoStatus::kStereoCaliDataNotAvailable;
     }
 
-    remap(left_img, left_img, this->left_map1_, this->left_map2_, cv::INTER_LINEAR);
-    remap(right_img, right_img, this->right_map1_, this->right_map2_, cv::INTER_LINEAR);
+    remap(stereo_frame.left_img(), stereo_frame.left_img(), this->left_map1_, this->left_map2_, cv::INTER_LINEAR);
+    remap(stereo_frame.right_img(), stereo_frame.right_img(), this->right_map1_, this->right_map2_, cv::INTER_LINEAR);
 
     return StereoStatus::kStereoSuccess;
 }
@@ -376,4 +383,16 @@ StereoStatus Stereo::StereoClose() {
 
     cout << "[StereoCam] Stereo camera successfully closed" << endl;
     return StereoStatus::kStereoSuccess;
+}
+
+Mat StereoFrame::left_img(){
+    return this->left_img_;
+}
+
+Mat StereoFrame::right_img(){
+    return this->right_img_;
+}
+
+double StereoFrame::timestamp(){
+    return this->timestamp_;
 }
