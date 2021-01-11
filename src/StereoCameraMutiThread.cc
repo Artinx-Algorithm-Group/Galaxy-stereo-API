@@ -34,11 +34,12 @@ bool StereoMultithread::IsBufferEmpty(){
     return this->buffer_.empty();
 }
 
-void StereoMultithread::AcquireStereoFrameFromThread(StereoFrame &stereo_frame){
+void StereoMultithread::AcquireStereoFrameFromThread(StereoFrame &stereo_frame_out){
     lock_guard<mutex> guard(this->buffer_mutex_);
 
-    stereo_frame = this->buffer_.front();
+    stereo_frame_out = this->buffer_.front();
     this->buffer_.pop();
+
 }
 
 void StereoMultithread::TerminateTask(){

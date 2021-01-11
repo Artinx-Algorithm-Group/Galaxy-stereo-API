@@ -99,8 +99,7 @@ private:
 class StereoFrame{
 public:
     StereoFrame() = default;
-    StereoFrame(cv::Mat& left_img, cv::Mat& right_img, double timestamp) : 
-        left_img_(left_img), right_img_(right_img), timestamp_(timestamp){};
+    StereoFrame(cv::Mat& left_img, cv::Mat& right_img, double timestamp);
 
     cv::Mat left_img();
     cv::Mat right_img();

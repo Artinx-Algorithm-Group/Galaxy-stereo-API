@@ -385,6 +385,12 @@ StereoStatus Stereo::StereoClose() {
     return StereoStatus::kStereoSuccess;
 }
 
+StereoFrame::StereoFrame(cv::Mat& left_img, cv::Mat& right_img, double timestamp){
+    this->left_img_ = left_img.clone();
+    this->right_img_ = right_img.clone();
+    this->timestamp_ = timestamp;
+}
+
 Mat StereoFrame::left_img(){
     return this->left_img_;
 }

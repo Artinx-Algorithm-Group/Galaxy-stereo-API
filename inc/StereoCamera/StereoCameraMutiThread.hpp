@@ -27,6 +27,7 @@ public:
 private:
     std::mutex buffer_mutex_;
     std::queue<StereoFrame> buffer_;
+    // StereoCamera::StereoFrame frame_;
 
     uint8_t buffer_size_ = 2;
 

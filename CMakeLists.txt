@@ -16,9 +16,11 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(OpenCV_DIR /home/artinx001/3rdparty/opencv-3.4.12/build)
 find_package(OpenCV 3 REQUIRED)
 find_package(Threads REQUIRED)
+find_package(Boost COMPONENTS filesystem REQUIRED)
 
 include_directories(
     ${OpenCV_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/inc
 )
 
@@ -61,4 +63,20 @@ target_link_libraries(
         ${OpenCV_LIBS}
         libgxiapi.so          # /usr/lib/libgxiapi.so
         Threads::Threads
+)
+
+add_executable(
+    MutiThreadRecordDataRect
+        ${PROJECT_SOURCE_DIR}/src/GxCamera.cc
+        ${PROJECT_SOURCE_DIR}/src/StereoCamera.cc
+        ${PROJECT_SOURCE_DIR}/src/StereoCameraMutiThread.cc
+        ${PROJECT_SOURCE_DIR}/sample/MutiThreadRecordDataRect.cc
+)
+
+target_link_libraries(
+    MutiThreadRecordDataRect 
+        ${OpenCV_LIBS}
+        libgxiapi.so          # /usr/lib/libgxiapi.so
+        Threads::Threads
+        Boost::filesystem
 )

@@ -66,9 +66,10 @@ int main(int argc, char **argv) {
     signal(SIGINT, SigintHandler);
     thread img_acquire_thread(&StereoMultithread::MutithreadCaptureTask, &stereo);
 
-    StereoFrame stereo_frame;
-    Mat combined_img;
     while (!stop_flag){
+        StereoFrame stereo_frame;
+        Mat combined_img;
+
         if(stereo.IsBufferEmpty()){
             continue;
         }
@@ -81,7 +82,7 @@ int main(int argc, char **argv) {
         hconcat(stereo_frame.left_img(), stereo_frame.right_img(), combined_img);
         cvtColor(combined_img, combined_img, cv::COLOR_RGB2BGR);
         imshow("out", combined_img);
-        waitKey(10);
+        waitKey(100);
     }
 
     stereo.TerminateTask();
