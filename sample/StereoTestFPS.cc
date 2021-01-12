@@ -49,6 +49,8 @@ int main(int argc, char **argv) {
         }
     }
 
+    stereo.ComputeRectParam();
+
     stereo.StartStereoStream();
 
     Mat left_rect, right_rect, combined_img;

@@ -32,6 +32,7 @@ using cv::stereoRectify;
 using cv::Size;
 using cv::initUndistortRectifyMap;
 using cv::remap;
+using cv::resize;
 
 using StereoCamera::Stereo;
 using StereoCamera::StereoStatus;
@@ -238,6 +239,12 @@ StereoStatus Stereo::LoadStereoCaliData(const std::string cali_data_path) {
     this->frame_width_ = cali_data["Frame.width"];
     this->frame_height_ = cali_data["Frame.height"];
 
+    cout << "[StereoCam] calibration data loaded" << endl;
+
+    return StereoStatus::kStereoSuccess;
+}
+
+StereoStatus Stereo::ComputeRectParam(){
     Mat R1, R2, P1, P2, Q;
     stereoRectify(this->left_cam_intrinsic_mat_, this->left_cam_dist_param_, 
                   this->right_cam_intrinsic_mat_, this->right_cam_dist_param_,
@@ -245,8 +252,8 @@ StereoStatus Stereo::LoadStereoCaliData(const std::string cali_data_path) {
                   this->rot_mat_, this->trans_vec_,
                   R1, R2, P1, P2, Q);
 
-    cout << "[StereoCam] New intrinsics matrix P1:" << endl << P1 << endl;
-    cout << "[StereoCam] New intrinsics matrix P2:" << endl << P2 << endl;
+    cout << "[StereoCam] New intrinsics matrix after rectify P1:" << endl << P1 << endl;
+    cout << "[StereoCam] New intrinsics matrix after rectify P2:" << endl << P2 << endl;
 
     initUndistortRectifyMap(this->left_cam_intrinsic_mat_, this->left_cam_dist_param_, 
                             R1, P1, cv::Size(this->frame_width_, this->frame_height_),
@@ -262,8 +269,6 @@ StereoStatus Stereo::LoadStereoCaliData(const std::string cali_data_path) {
     // cout << "Right_map2: " << endl << this->right_map2_ << endl;
 
     this->is_rectified_img_available = true;
-
-    cout << "[StereoCam] calibration data loaded" << endl;
 
     return StereoStatus::kStereoSuccess;
 }
@@ -309,6 +314,11 @@ StereoStatus Stereo::GetColorImgStereo(StereoFrame &stereo_frame) {
 
     duration<double> time_from_start = duration_cast<duration<double>>(this->last_trigger_time_ - this->capture_start_time_);
     timestamp = time_from_start.count();
+
+    if(this->downsample_factor_ < 1.0){
+        resize(left_img, left_img, Size(), this->downsample_factor_, this->downsample_factor_);
+        resize(right_img, right_img, Size(), this->downsample_factor_, this->downsample_factor_);
+    }
 
     StereoFrame _stereo_frame(left_img, right_img, timestamp);
     stereo_frame = _stereo_frame;
@@ -383,6 +393,47 @@ StereoStatus Stereo::StereoClose() {
 
     cout << "[StereoCam] Stereo camera successfully closed" << endl;
     return StereoStatus::kStereoSuccess;
+}
+
+int Stereo::FrameWidth(){
+    return this->frame_width_;
+}
+
+int Stereo::FrameHeight(){
+    return this->frame_height_;
+}
+
+void Stereo::SetFrameDownSampleFactor(double f){
+    this->downsample_factor_ = f;
+
+    this->left_cam_intrinsic_mat_.at<double>(0, 0) *= f;
+    this->left_cam_intrinsic_mat_.at<double>(0, 2) *= f;
+    this->left_cam_intrinsic_mat_.at<double>(1, 1) *= f;
+    this->left_cam_intrinsic_mat_.at<double>(1, 2) *= f;
+
+    this->right_cam_intrinsic_mat_.at<double>(0, 0) *= f;
+    this->right_cam_intrinsic_mat_.at<double>(0, 2) *= f;
+    this->right_cam_intrinsic_mat_.at<double>(1, 1) *= f;
+    this->right_cam_intrinsic_mat_.at<double>(1, 2) *= f;
+
+    this->frame_width_ *= f;
+    this->frame_height_ *= f;
+
+    cout << "[StereoCam] New left intrinsics after down sample: " << endl
+         << this->left_cam_intrinsic_mat_ << endl;
+
+    cout << "[StereoCam] New right intrinsics after down sample: " << endl
+         << this->right_cam_intrinsic_mat_ << endl;
+
+    this->ComputeRectParam();
+}
+
+cv::Mat Stereo::LeftCamIntrinsicMat(){
+    return this->left_cam_intrinsic_mat_;
+}
+
+cv::Mat Stereo::RightCamIntrinsicMat(){
+    return this->left_cam_intrinsic_mat_;
 }
 
 StereoFrame::StereoFrame(cv::Mat& left_img, cv::Mat& right_img, double timestamp){

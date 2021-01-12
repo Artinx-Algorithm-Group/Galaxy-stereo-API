@@ -12,5 +12,4 @@ Please refer to the [samples](sample/).
 
 ## TODO
 
-* Camera sycnazation
-* Data record feature
+* Optimize multi-thread model

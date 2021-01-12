@@ -61,6 +61,9 @@ int main(int argc, char **argv) {
         }
     }
 
+    stereo.ComputeRectParam();
+    stereo.SetFrameDownSampleFactor(0.5);
+
     stereo.StartStereoStream();
 
     signal(SIGINT, SigintHandler);

@@ -59,6 +59,7 @@ public:
     StereoStatus StartStereoStream();
 
     StereoStatus LoadStereoCaliData(const std::string cali_data_path);
+    StereoStatus ComputeRectParam();
 
     StereoStatus SendSoftTrigger();
 
@@ -68,7 +69,15 @@ public:
     StereoStatus StereoStreamOff();
     StereoStatus StereoClose();
 
-    FrameFormat frame_format = FrameFormat::kRGB;
+    cv::Mat LeftCamIntrinsicMat();
+    cv::Mat RightCamIntrinsicMat();
+
+    int FrameWidth();
+    int FrameHeight();
+
+    void SetFrameDownSampleFactor(double f);
+
+    FrameFormat frame_format = FrameFormat::kRGB; // Default
 
 private:
     GxCamera::Camera left_cam_;
@@ -76,6 +85,8 @@ private:
 
     int frame_width_;  // for left and right camera
     int frame_height_; // for left and right camera
+
+    double downsample_factor_ = 1.0;
 
     cv::Mat left_cam_intrinsic_mat_;
     cv::Mat right_cam_intrinsic_mat_;

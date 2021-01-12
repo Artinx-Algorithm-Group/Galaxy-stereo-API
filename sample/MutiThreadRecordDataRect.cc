@@ -95,6 +95,8 @@ int main(int argc, char const *argv[]){
         return EXIT_FAILURE;
     }
 
+    stereo.ComputeRectParam();
+
     stereo.StartStereoStream();
 
     signal(SIGINT, SigintHandler);
