@@ -29,8 +29,8 @@ using StereoCamera::StereoMultithread;
 using StereoCamera::StereoFrame;
 
 namespace {
-    const double kExposureTime = 20.0;
-    const double kFrameRate = 150.0;
+    const double kExposureTime = 15000.0;
+    const double kFrameRate = 200.0;
 
     // c-style string serial number for code compatibility
     char left_cam_serial_num[] = "KE0200080465";

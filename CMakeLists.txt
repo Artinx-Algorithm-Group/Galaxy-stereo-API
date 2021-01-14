@@ -25,14 +25,14 @@ include_directories(
 )
 
 add_executable(
-    StereoImgCaptureSampleRect
+    StereoImgCaptureRect
         ${PROJECT_SOURCE_DIR}/src/GxCamera.cc
         ${PROJECT_SOURCE_DIR}/src/StereoCamera.cc
         ${PROJECT_SOURCE_DIR}/sample/StereoImgCaptureRect.cc
 )
 
 target_link_libraries(
-    StereoImgCaptureSampleRect 
+    StereoImgCaptureRect 
         ${OpenCV_LIBS}
         libgxiapi.so          # /usr/lib/libgxiapi.so
 )
@@ -79,4 +79,18 @@ target_link_libraries(
         libgxiapi.so          # /usr/lib/libgxiapi.so
         Threads::Threads
         Boost::filesystem
+)
+
+add_executable(
+    StereoImgCaptureRaw
+        ${PROJECT_SOURCE_DIR}/src/GxCamera.cc
+        ${PROJECT_SOURCE_DIR}/src/StereoCamera.cc
+        ${PROJECT_SOURCE_DIR}/src/StereoCameraMutiThread.cc
+        ${PROJECT_SOURCE_DIR}/sample/StereoImgCaptureRaw.cc
+)
+
+target_link_libraries(
+    StereoImgCaptureRaw 
+        ${OpenCV_LIBS}
+        libgxiapi.so          # /usr/lib/libgxiapi.so
 )
