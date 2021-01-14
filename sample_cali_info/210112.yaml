@@ -1,0 +1,50 @@
+%YAML:1.0
+
+Frame.width: 1280
+Frame.height: 1024
+
+# Left camera intrinsic and distortion parameters 
+LEFT.K: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [1295.7, 0.0, 625.4, 
+          0.0, 1297.7, 498.3, 
+          0.0, 0.0, 1.0]
+
+LEFT.D: !!opencv-matrix
+   rows: 1
+   cols: 5
+   dt: d
+   data: [-0.2225, 0.2120, 0.0004319, -0.0001110, 0.0]  # k1, k2, p1, p2, k3
+
+# Right camera intrinsic and distortion parameters 
+RIGHT.K: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [1298.0, 0.0, 639.8, 
+          0.0, 1299.7, 499.4, 
+          0.0, 0.0, 1.0]
+
+RIGHT.D: !!opencv-matrix
+   rows: 1
+   cols: 5
+   dt: d
+   data: [-0.2222, 0.2093, 0.0002, -0.0019, 0.0]
+
+# Rotation matrix from left camera to right camera
+R: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [0.9997, 0.0234, -0.0035, 
+          -0.0234, 0.9997, -0.0121, 
+          0.0032, 0.0122, 0.9999]
+
+# Translation vector from left camera to right camera (mm)
+TRANS: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [-148.0854, 1.0005, 1.2267]
