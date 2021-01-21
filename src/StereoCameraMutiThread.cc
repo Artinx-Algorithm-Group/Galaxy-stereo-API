@@ -18,28 +18,13 @@ void StereoMultithread::MutithreadCaptureTask(){
         StereoFrame stereo_frame;
         this->SendSoftTrigger();
         this->GetColorImgStereoRectified(stereo_frame);
-        {
-            lock_guard<mutex> guard(this->buffer_mutex_);
-            while (this->buffer_.size() >= this->buffer_size_){
-                this->buffer_.pop();
-            }
-            this->buffer_.push(stereo_frame);
-        }
+        this->buffer_queue_.Push(stereo_frame);
     }
     
 }
 
-bool StereoMultithread::IsBufferEmpty(){
-    lock_guard<mutex> guard(this->buffer_mutex_);
-    return this->buffer_.empty();
-}
-
 void StereoMultithread::AcquireStereoFrameFromThread(StereoFrame &stereo_frame_out){
-    lock_guard<mutex> guard(this->buffer_mutex_);
-
-    stereo_frame_out = this->buffer_.front();
-    this->buffer_.pop();
-
+    this->buffer_queue_.WaitAndPop(stereo_frame_out);
 }
 
 void StereoMultithread::TerminateTask(){

@@ -16,7 +16,7 @@ using StereoCamera::StereoStatus;
 using StereoCamera::StereoFrame;
 
 namespace {
-    const uint32_t kExposureTime = 20.0;
+    const uint32_t kExposureTime = 15000.0;
     const uint16_t kFrameRate = 180.0;
 
     // c-style string serial number for code compatibility
@@ -50,6 +50,7 @@ int main(int argc, char **argv) {
     }
 
     stereo.ComputeRectParam();
+    stereo.SetFrameDownSampleFactor(0.5);
 
     stereo.StartStereoStream();
 

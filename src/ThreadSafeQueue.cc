@@ -1,5 +1,3 @@
-#include <mutex>
-
 #include "ThreadSafeQueue/ThreadSafeQueue.hpp"
 
 using std::move;
@@ -7,6 +5,8 @@ using std::move;
 using std::mutex;
 using std::lock_guard;
 using std::unique_lock;
+
+using StereoCamera::ThreadSafe::ThreadSafeQueue;
 
 template<typename T>
 void ThreadSafeQueue<T>::Push(T& new_val){

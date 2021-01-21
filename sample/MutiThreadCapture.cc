@@ -73,9 +73,6 @@ int main(int argc, char **argv) {
         StereoFrame stereo_frame;
         Mat combined_img;
 
-        if(stereo.IsBufferEmpty()){
-            continue;
-        }
         // steady_clock::time_point cap_start = steady_clock::now();
         stereo.AcquireStereoFrameFromThread(stereo_frame);
         // steady_clock::time_point right_cam_cap_end = steady_clock::now();
@@ -85,7 +82,7 @@ int main(int argc, char **argv) {
         hconcat(stereo_frame.left_img(), stereo_frame.right_img(), combined_img);
         cvtColor(combined_img, combined_img, cv::COLOR_RGB2BGR);
         imshow("out", combined_img);
-        waitKey(100);
+        waitKey(1);
     }
 
     stereo.TerminateTask();

@@ -7,6 +7,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "StereoCamera/StereoCamera.hpp"
+#include "ThreadSafeQueue/ThreadSafeQueue.hpp"
 
 namespace StereoCamera{
 
@@ -17,19 +18,16 @@ enum class ThreadCaptureStatus{
 
 class StereoMultithread : public Stereo{
 public:
+    StereoMultithread() = default;
+
     void MutithreadCaptureTask();
     void TerminateTask();
-
-    bool IsBufferEmpty();
 
     void AcquireStereoFrameFromThread(StereoFrame &stereo_frame);
 
 private:
-    std::mutex buffer_mutex_;
-    std::queue<StereoFrame> buffer_;
-    // StereoCamera::StereoFrame frame_;
 
-    uint8_t buffer_size_ = 2;
+    ThreadSafe::ThreadSafeQueue<StereoFrame> buffer_queue_;
 
     bool stop_flag_ = false;
 };

@@ -85,7 +85,6 @@ add_executable(
     StereoImgCaptureRaw
         ${PROJECT_SOURCE_DIR}/src/GxCamera.cc
         ${PROJECT_SOURCE_DIR}/src/StereoCamera.cc
-        ${PROJECT_SOURCE_DIR}/src/StereoCameraMutiThread.cc
         ${PROJECT_SOURCE_DIR}/sample/StereoImgCaptureRaw.cc
 )
 

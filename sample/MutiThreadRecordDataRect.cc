@@ -103,9 +103,6 @@ int main(int argc, char const *argv[]){
     thread img_acquire_thread(&StereoMultithread::MutithreadCaptureTask, &stereo);
 
     while (!stop_flag){
-        if(stereo.IsBufferEmpty()){
-            continue;
-        }
         StereoFrame stereo_frame;
         Mat combined_img;
         stereo.AcquireStereoFrameFromThread(stereo_frame);
